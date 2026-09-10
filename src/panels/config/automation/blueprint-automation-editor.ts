@@ -3,6 +3,7 @@ import { mdiContentSave } from "@mdi/js";
 import type { HassEntity } from "home-assistant-js-websocket";
 import { css, html, nothing, type CSSResultGroup } from "lit";
 import { customElement, property, state } from "lit/decorators";
+import { formatDateTime } from "../../../common/datetime/format_date_time";
 import { fireEvent } from "../../../common/dom/fire_event";
 import "../../../components/ha-alert";
 import "../../../components/ha-button";
@@ -33,6 +34,12 @@ export class HaBlueprintAutomationEditor extends HaBlueprintGenericEditor {
   }
 
   protected render() {
+    const suspendedUntil = this.stateObj?.attributes.suspended_until
+      ? new Date(this.stateObj.attributes.suspended_until)
+      : undefined;
+    const isValidSuspendedUntil =
+      suspendedUntil && !isNaN(suspendedUntil.getTime());
+
     return html`
       <slot name="alerts"></slot>
       ${
@@ -42,6 +49,20 @@ export class HaBlueprintAutomationEditor extends HaBlueprintGenericEditor {
                 ${this.hass.localize(
                   "ui.panel.config.automation.editor.disabled"
                 )}
+                ${
+                  isValidSuspendedUntil
+                    ? html`<br />${this.hass.localize(
+                          "ui.panel.config.automation.editor.suspended_until",
+                          {
+                            time: formatDateTime(
+                              suspendedUntil,
+                              this.hass.locale,
+                              this.hass.config
+                            ),
+                          }
+                        )}`
+                    : nothing
+                }
                 <ha-button
                   appearance="plain"
                   size="s"
